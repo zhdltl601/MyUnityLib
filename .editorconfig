@@ -1,0 +1,7 @@
+﻿[*.cs]
+
+# IDE0090: 'new(...)' 사용
+dotnet_diagnostic.IDE0090.severity = none
+
+# IDE0017: 개체 초기화 단순화
+dotnet_diagnostic.IDE0017.severity = none

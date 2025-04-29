@@ -1,0 +1,11 @@
+using UnityEngine;
+using UnityEditor;
+
+[CustomEditor(typeof(#PARENTCLASSNAME#))]
+public class #CLASSNAME# : Editor
+{
+    private OnEnable()
+    {
+
+    }
+}
