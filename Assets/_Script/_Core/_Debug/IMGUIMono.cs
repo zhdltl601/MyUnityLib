@@ -1,34 +1,41 @@
-using System;
 using System.Collections.Generic;
 using UnityEngine;
-
-internal struct DebugWorldInfo
+public enum DebugKey
 {
-    public Vector3 worldPosition;
-    public string message;
-
-    public DebugWorldInfo(Vector3 worldPosition, string message)
-    {
-        this.worldPosition = worldPosition;
-        this.message = message;
-    }
-
-    public Vector3 GetScreenPos()
-    {
-        return default;
-    }
+    none,
+    temp1,
+    temp2,
+    temp3
 }
-
 [DefaultExecutionOrder(-200)]
-internal class IMGUIMono : MonoSingleton<IMGUIMono>
+public class IMGUIMono : MonoSingleton<IMGUIMono>
 {
     protected override MonoSingletonFlags SingletonFlag => MonoSingletonFlags.DontDestroyOnLoad;
+    public static DebugKey debugKey = DebugKey.none;
+
     private static bool EnableGUI { get; set; } = true;
-    public IEnumerable<DebugWorldInfo> WorldInfoEnumerable { get; set; }
-    public static event Action BeforeUpdate;
+
+    private static readonly GUIStyle gUIStyle = new GUIStyle();
+    private static readonly GUIStyle style = gUIStyle;
+    private static readonly List<DebugWorldInfo> worldInfoList = new List<DebugWorldInfo>(32);
+
+    [SerializeField] private float screenMultiplier = 0.03f;
+
+    protected override void Awake()
+    {
+        base.Awake();
+        style.alignment = TextAnchor.UpperLeft;
+    }
     private void Update()
     {
-        BeforeUpdate?.Invoke();
+        worldInfoList.Clear();
+    }
+    public static void DebugTextWorld<T>(T target, Vector3 worldPosition, float sizeRatio = 1, DebugKey key = DebugKey.none)
+    {
+        if (debugKey != key) return;
+
+        DebugWorldInfo debugWorldInfo = new DebugWorldInfo(worldPosition, target.ToString(), sizeRatio);
+        worldInfoList.Add(debugWorldInfo);
     }
     private void OnGUI()
     {
@@ -36,17 +43,18 @@ internal class IMGUIMono : MonoSingleton<IMGUIMono>
 
         Camera camera = Camera.main;
         int screenHeight = Screen.height;
-        Debug.Log(screenHeight);
-        foreach (DebugWorldInfo item in WorldInfoEnumerable)
+        int fontSize = (int)(screenHeight * screenMultiplier);
+
+        foreach (DebugWorldInfo item in worldInfoList)
         {
+            style.fontSize = (int)(fontSize * item.sizeRatio);
             Vector3 screenPosition = camera.WorldToScreenPoint(item.worldPosition, Camera.MonoOrStereoscopicEye.Mono);
             screenPosition.y = screenHeight - screenPosition.y;
-            Vector2 size = new Vector3(200, 200);
+
+            Vector2 size = new Vector3(2000, 2000);
             Rect position = new Rect(screenPosition, size);
 
-
-            //GUI.skin.label.Draw(position, )
-            GUI.Label(position, item.message, GUI.skin.label);
+            GUI.Label(position, item.message, style);
         }
     }
 }
