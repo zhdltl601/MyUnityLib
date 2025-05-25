@@ -30,7 +30,7 @@ public static class TimerRunner
     [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
     private static void Init()
     {
-        PlayerLoopSystem timerLoop = CustomPlayerLoop.CreateLoopSystem(typeof(TimerUpdate), TimerUpdate.UpdateFunction);
+        PlayerLoopSystem timerLoop = CustomPlayerLoop.CreateLoopSystem(typeof(TimerUpdate), new PlayerLoopSystem.UpdateFunction(TimerUpdate.UpdateFunction));
         CustomPlayerLoop.RegisterCustomLoop(typeof(Update), timerLoop);
     }
     /// <summary>
