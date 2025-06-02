@@ -9,8 +9,10 @@ public static class HierachyDisplayer
 {
     static HierachyDisplayer()
     {
+        EditorApplication.hierarchyWindowItemOnGUI -= HandleOnHierarchyWindowItemOnGUI;
         EditorApplication.hierarchyWindowItemOnGUI += HandleOnHierarchyWindowItemOnGUI;
 
+        SceneView.duringSceneGui -= OrbitVisual;
         SceneView.duringSceneGui += OrbitVisual;
     }
     private static void HandleOnHierarchyWindowItemOnGUI(int instanceID, Rect selectionRect)
@@ -36,7 +38,7 @@ public static class HierachyDisplayer
         GameObject gameObject = EditorUtility.InstanceIDToObject(instanceID) as GameObject;
         if (gameObject != null)
         {
-            Rect toggleRect = new Rect(selectionRect);
+            Rect toggleRect = selectionRect;
             toggleRect.x -= 27f;
             toggleRect.width = 13f;
             bool active = EditorGUI.Toggle(toggleRect, gameObject.activeSelf);
@@ -56,13 +58,13 @@ public static class HierachyDisplayer
         if (PrefabUtility.GetCorrespondingObjectFromOriginalSource(gameObject) != null)
             return;
 
-        Component[] components = gameObject.GetComponents<Component>();
+        Component[] components = gameObject.GetComponents<Component>(); // getCompos by list?
 
         Component componentBackground = null;
         Component componentMono = null;
 
         int componentLength = components.Length;
-        for (int i = 1; i < componentLength; i++)
+        for (int i = 1; i < componentLength; i++) // starts with 1 because 0 is always Transform
         {
             Component item = components[i];
 
@@ -72,22 +74,22 @@ public static class HierachyDisplayer
             MonoBehaviour itemAsMono = item as MonoBehaviour;
             bool isItemMono = itemAsMono != null;
 
-            if (monoInitFlag && isItemMono)
+            if (monoInitFlag && isItemMono)             //first mono component found
             {
-                string namespaceName = itemAsMono.GetType().Namespace;
+                string namespaceStr = itemAsMono.GetType().Namespace;
 
                 //ban list
-                bool isBannedNamespace = namespaceName != null
-                    && (namespaceName.StartsWith(nameof(UnityEngine))
-                    || namespaceName.StartsWith(nameof(UnityEditor))
-                    || namespaceName.StartsWith(nameof(TMPro)));
+                bool isBannedNamespace = namespaceStr != null
+                    && (namespaceStr.StartsWith(nameof(UnityEngine))
+                    || namespaceStr.StartsWith(nameof(UnityEditor))
+                    || namespaceStr.StartsWith(nameof(TMPro)));
 
                 if (!isBannedNamespace)
                 {
                     componentMono = itemAsMono;
                 }
             }
-            if (backgroundInitFlag && !isItemMono)
+            if (backgroundInitFlag && !isItemMono)      //first non mono component found
             {
                 componentBackground = item;
             }
@@ -100,17 +102,14 @@ public static class HierachyDisplayer
             componentBackground = components[0];
         }
 
-        Type type = componentBackground.GetType();
-        Object targetContentObject = componentBackground;
-
-        GUIContent content = EditorGUIUtility.ObjectContent(targetContentObject, type);
+        GUIContent content = EditorGUIUtility.ObjectContent(componentBackground, componentBackground.GetType());
         content.tooltip = content.text;
         content.text = "";
 
         if (content == null)
             return;
 
-        bool isSelected = Selection.instanceIDs.Contains(instanceID);
+        bool isSelected = Selection.Contains(instanceID);
         bool isHovering = selectionRect.Contains(Event.current.mousePosition);
 
         Rect backgroundRect = selectionRect;
@@ -137,6 +136,15 @@ public static class HierachyDisplayer
             smallIconRect.height = 11.25f;
             smallIconRect.position += new Vector2(9.25f, 5);
             EditorGUI.LabelField(smallIconRect, content);
+        }
+
+        bool isDirty = EditorUtility.IsDirty(instanceID) || EditorUtility.IsDirty(componentBackground) || EditorUtility.IsDirty(componentMono);
+        if (isDirty)
+        {
+            Rect dirtyPosition = selectionRect;
+            dirtyPosition.x -= 1.5f;
+            dirtyPosition.width = 1.5f;
+            EditorGUI.DrawRect(dirtyPosition, GeneralEditorUtility.ColorUtility.Hierachy.NewBlue);
         }
     }
     private static Color GetColor(bool isSelected, bool isHovering)
