@@ -1,15 +1,8 @@
-using UnityEngine;
-using System.Reflection;
 using System;
+using UnityEngine;
 
 public abstract class MonoSingleton<T> : MonoBehaviour where T : MonoSingleton<T>
 {
-    //private static class SingletonPresetManager 
-    //{
-    //    private static T preset = null;
-    //    public static T GetPreset => preset;
-    //}
-
     protected virtual MonoSingletonFlags SingletonFlag { get; }
     private static T _instance = null;
 
@@ -18,7 +11,7 @@ public abstract class MonoSingleton<T> : MonoBehaviour where T : MonoSingleton<T
     {
         get
         {
-            if (_instance is null)
+            if (_instance is null) //using C# null check
             {
                 if (IsShuttingDown) return null;
 
@@ -31,9 +24,10 @@ public abstract class MonoSingleton<T> : MonoBehaviour where T : MonoSingleton<T
     private static T GetPresetSingleton() => default;
     private static T RuntimeInitialize()
     {
-        GameObject gameObject = new(name: "Runtime_Singleton_" + typeof(T).Name);
+        string singletonMessage = "Runtime_Singleton" + typeof(T).Name;
+        GameObject gameObject = new GameObject(name: singletonMessage);
         T result = gameObject.AddComponent<T>();
-        Debug.LogWarning("Runtime_Singleton_" + typeof(T).Name);
+        Debug.LogWarning(singletonMessage, gameObject);
         return result;
     }
     protected virtual void Awake()
@@ -41,9 +35,8 @@ public abstract class MonoSingleton<T> : MonoBehaviour where T : MonoSingleton<T
         //check two singleton error
         if (_instance is not null)
         {
-            Debug.LogError("[ERROR]TwoSingletons_" + typeof(T).Name);
             Destroy(gameObject);
-            return;
+            throw new Exception("TwoSingletons_" + typeof(T).Name);
         }
 
         //custom singleton attribute setting
@@ -54,11 +47,10 @@ public abstract class MonoSingleton<T> : MonoBehaviour where T : MonoSingleton<T
         Debug.Log($"[Singleton_Awake] [type : {typeof(T).Name}] [name : {gameObject.name}]");
 #endif
         _instance = this as T;
-
     }
     protected virtual void OnDestroy()
     {
-        if (_instance == this) _instance = null;
+        if (_instance == this) _instance = null; //explicitly setting null for C# null check
     }
     protected virtual void OnApplicationQuit()
     {
