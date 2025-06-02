@@ -17,7 +17,7 @@ public class IMGUIMono : MonoSingleton<IMGUIMono>
 {
     protected override MonoSingletonFlags SingletonFlag => MonoSingletonFlags.DontDestroyOnLoad;
 
-    public static DebugKey CurrentDebugKey { get; set; } = DebugKey.defaultFlag;
+    public static DebugKey CurrentDebugKey { get; set; } = DebugKey.defaultFlag | DebugKey.temp2;
     private static bool EnableGUI { get; set; } = true;
     private static readonly List<DebugInfo> debugInfoList = new List<DebugInfo>(32);
 
@@ -63,8 +63,11 @@ public class IMGUIMono : MonoSingleton<IMGUIMono>
     }
     private void OnGUI()
     {
+        //uncomment all to use matrix based scaling
+        //this allows to scale images correctly
+
         if (!EnableGUI) return;
-        Matrix4x4 originalGUIMatrix = GUI.matrix;
+        //Matrix4x4 originalGUIMatrix = GUI.matrix;
 
         Camera camera = Camera.main;
 
@@ -72,16 +75,20 @@ public class IMGUIMono : MonoSingleton<IMGUIMono>
         int screenWidth = Screen.width;
         int fontSize = Mathf.Min(screenHeight, screenWidth);
 
-        fontSize = (int)(fontSize * 0.005f * screenMultiplier);
+        //fontSize = (int)(fontSize * 0.005f * screenMultiplier);   //Matrix based
+        fontSize = (int)(fontSize * 0.05f * screenMultiplier);      //Fontsize based
 
-        Vector3 matrixScale = new Vector3(fontSize, fontSize, fontSize);
-        Matrix4x4 guiMatrixResolutionIndependent = Matrix4x4.Scale(matrixScale);
-        bool isZaxisZero = guiMatrixResolutionIndependent.m22 == 0;
+        //Vector3 matrixScale = new Vector3(fontSize, fontSize, fontSize);
+        //Matrix4x4 guiMatrixResolutionIndependent = Matrix4x4.Scale(matrixScale);
+        /*bool isZaxisZero = guiMatrixResolutionIndependent.m22 == 0;
         if (isZaxisZero)
         {
             Debug.LogWarning($"adjust {nameof(screenMultiplier)}");
-        }
-        GUI.matrix = guiMatrixResolutionIndependent;
+        }*/
+        //GUI.matrix = guiMatrixResolutionIndependent;
+
+        debugGuiSkin.label.fontSize = fontSize;
+        debugGuiSkin.box.fontSize = fontSize;
 
         int non3DCnt = 0;
         int infoListCount = debugInfoList.Count;
@@ -94,16 +101,14 @@ public class IMGUIMono : MonoSingleton<IMGUIMono>
             Vector2 size;
             string message = item.message;
 
-            const int k_charWidth = 10; //approx
-
-            size = new Vector3(item.message.Length * k_charWidth, 30);
+            size = new Vector3((int)(item.message.Length * fontSize * 0.61f), fontSize);
             if (item.is3D) //iterate World Text
             {
                 screenPosition = camera.WorldToScreenPoint(item.worldPosition, Camera.MonoOrStereoscopicEye.Mono);
                 screenPosition.y = screenHeight - screenPosition.y;
 
-                screenPosition.x /= fontSize;
-                screenPosition.y /= fontSize;
+                /*screenPosition.x /= fontSize;
+                screenPosition.y /= fontSize;*/
 
                 position = new Rect(screenPosition, size);
 
@@ -111,11 +116,9 @@ public class IMGUIMono : MonoSingleton<IMGUIMono>
             }
             else //top left
             {
-                const int k_charHeight = 30; //approx
-
-                screenPosition = new Vector2(10, non3DCnt * k_charHeight * fontSize);
-                screenPosition.x /= fontSize;
-                screenPosition.y /= fontSize;
+                screenPosition = new Vector2(5, non3DCnt * fontSize);
+                /*screenPosition.x /= fontSize;
+                screenPosition.y /= fontSize;*/
 
                 position = new Rect(screenPosition, size);
                 GUI.Box(position, message, debugGuiSkin.box);
@@ -124,6 +127,6 @@ public class IMGUIMono : MonoSingleton<IMGUIMono>
         }
 
         //endl, set original GUI matrix
-        GUI.matrix = originalGUIMatrix;
+        //GUI.matrix = originalGUIMatrix;
     }
 }
