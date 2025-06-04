@@ -3,11 +3,20 @@ using UnityEngine;
 
 public abstract class TimerHandleBase
 {
-    public float EndTime { get; private set; }
+    private float k_backingFieldEndtime;
+    public float EndTime 
+    {
+        get => k_backingFieldEndtime; 
+        internal set
+        {
+            k_backingFieldEndtime = value;
+            IsCompleted = false;
+        }
+    }
     public bool IsCompleted { get; private set; }
 
     private readonly UnityEngine.Object target;
-    private Action onCompleteCallback;
+    public Action OnCompleteCallback; 
     internal TimerHandleBase(UnityEngine.Object unityObject, float duration)
     {
         if (unityObject == null) throw new ArgumentNullException($"{unityObject} is null");
@@ -19,19 +28,14 @@ public abstract class TimerHandleBase
     {
         if (IsCompleted) return;
 
-        bool unityObjectDead = target == null;
-        bool timeOut = Time.time > EndTime;
+        bool targetDestroyed = target == null; //todo : this is expensive
+        bool isTimeOut = Time.time > EndTime;
 
-        bool shouldKill =
-            unityObjectDead ||
-            timeOut;
+        bool shouldKill = targetDestroyed || isTimeOut;
 
-        bool onCompleteFire =
-            timeOut;
-
-        if (onCompleteFire)
+        if (isTimeOut)
         {
-            if (onCompleteCallback != null) onCompleteCallback.Invoke();
+            OnEnd();
         }
 
         if (shouldKill)
@@ -39,11 +43,16 @@ public abstract class TimerHandleBase
             Kill();
         }
     }
+    protected virtual void OnEnd()
+    {
+        if (OnCompleteCallback != null)
+        {
+            OnCompleteCallback.Invoke();
+        }
+    }
     public void Kill()
     {
-        Debug.Log("killed");
-        onCompleteCallback = null;
+        OnCompleteCallback = null;
         IsCompleted = true;
     }
-
 }

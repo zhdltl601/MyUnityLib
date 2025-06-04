@@ -1,65 +1,23 @@
 using System;
 using UnityEngine;
 
-public class TimerHandle
+public class TimerHandle<T> : TimerHandleBase
+    where T : UnityEngine.Object
 {
-    public float EndTime { get; private set; }
-    public bool IsCompleted { get; private set; }
-
-    private readonly UnityEngine.Object target;
-    private Action onCompleteCallback;
-    internal TimerHandle(UnityEngine.Object unityObject, float duration)
+    public new Action<T> OnCompleteCallback;
+    private readonly T target;
+    internal TimerHandle(T target, float duration)
+        : base(target, duration)
     {
-        if (unityObject == null) throw new ArgumentNullException($"{unityObject} is null");
-
-        target = unityObject;
-        EndTime = duration + Time.time;
+        if (target == null) throw new ArgumentNullException($"{target} is null");
+        this.target = target;
     }
-    public void AddCallback<Target>(Action<Target> action)
-        where Target : UnityEngine.Object
+    protected override void OnEnd()
     {
-        Debug.Assert(action != null, "action is null");
-
-        onCompleteCallback +=
-            () =>
-            {
-                //Action<Target> callbackResult = action;
-                //Debug.Assert(callbackResult != null, "callback cast failed");
-
-                //Target targetResult = target as Target;
-                //Debug.Assert(targetResult != null, "target cast failed");
-
-                //callbackResult.Invoke(targetResult);
-            };
-    }
-    internal void Update()
-    {
-        if (IsCompleted) return;
-
-        bool unityObjectDead = target == null;
-        bool timeOut = Time.time > EndTime;
-
-        bool shouldKill =
-            unityObjectDead ||
-            timeOut;
-
-        bool onCompleteFire =
-            timeOut;
-
-        if (onCompleteFire)
+        base.OnEnd();
+        if(OnCompleteCallback != null)
         {
-            if (onCompleteCallback != null) onCompleteCallback.Invoke();
+            OnCompleteCallback(target);
         }
-
-        if (shouldKill)
-        {
-            Kill();
-        }
-    }
-    public void Kill()
-    {
-        Debug.Log("killed");
-        onCompleteCallback = null;
-        IsCompleted = true;
     }
 }
