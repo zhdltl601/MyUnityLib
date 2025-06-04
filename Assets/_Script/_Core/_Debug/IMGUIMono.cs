@@ -5,20 +5,20 @@ using UnityEngine;
 [Flags]
 public enum DebugKey
 {
-    none = 0,
-    defaultFlag = 1 << 0,
-    temp2 = 1 << 1,
-    temp3 = 1 << 2,
-    temp4 = 1 << 3,
-    temp5 = 1 << 4
+    None = 0,
+    DefaultFlag = 1 << 0,
+    Temp2 = 1 << 1,
+    Temp3 = 1 << 2,
+    Temp4 = 1 << 3,
+    Temp5 = 1 << 4
 }
 [DefaultExecutionOrder(-200)]
 public class IMGUIMono : MonoSingleton<IMGUIMono>
 {
     protected override MonoSingletonFlags SingletonFlag => MonoSingletonFlags.DontDestroyOnLoad;
 
-    public static DebugKey CurrentDebugKey { get; set; } = DebugKey.defaultFlag | DebugKey.temp2;
-    private static bool EnableGUI { get; set; } = true;
+    public static DebugKey CurrentDebugKey { get; set; } = DebugKey.DefaultFlag | DebugKey.Temp2;
+    private static bool EnableGUI { get; set; } = false;
     private static readonly List<DebugInfo> debugInfoList = new List<DebugInfo>(32);
 
     [SerializeField, Range(0, 1)] private float screenMultiplier = 1;
@@ -32,31 +32,31 @@ public class IMGUIMono : MonoSingleton<IMGUIMono>
             EnableGUI = !EnableGUI;
         }
     }
-    public static void DebugTextWorld(DebugInfo debugWorldInfo, DebugKey key = DebugKey.defaultFlag)
+    public static void DebugTextWorld(DebugInfo debugWorldInfo, DebugKey key = DebugKey.DefaultFlag)
     {
-        if (!CanAddToList(key)) return;
+        if (!IsDebugAvailable(key)) return;
 
         debugWorldInfo.is3D = true;
         debugInfoList.Add(debugWorldInfo);
     }
-    public static void DebugTextWorld<T>(Vector3 worldPosition, T target, float sizeRatio = 1, DebugKey key = DebugKey.defaultFlag)
+    public static void DebugTextWorld<T>(Vector3 worldPosition, T target, float sizeRatio = 1, DebugKey key = DebugKey.DefaultFlag)
     {
-        if (!CanAddToList(key)) return;
+        if (!IsDebugAvailable(key)) return;
 
         DebugInfo debugWorldInfo = new DebugInfo(worldPosition, target.ToString(), sizeRatio);
         debugWorldInfo.is3D = true;
         debugInfoList.Add(debugWorldInfo);
     }
-    public static void DebugText(DebugInfo debugInfo, DebugKey key = DebugKey.defaultFlag)
+    public static void DebugText(DebugInfo debugInfo, DebugKey key = DebugKey.DefaultFlag)
     {
-        if (!CanAddToList(key))
+        if (!IsDebugAvailable(key))
         {
             return;
         }
 
         debugInfoList.Add(debugInfo);
     }
-    public static bool CanAddToList(DebugKey key)
+    public static bool IsDebugAvailable(DebugKey key)
     {
         bool result = (key & CurrentDebugKey) > 0 && EnableGUI;
         return result;
@@ -76,7 +76,7 @@ public class IMGUIMono : MonoSingleton<IMGUIMono>
         int fontSize = Mathf.Min(screenHeight, screenWidth);
 
         //fontSize = (int)(fontSize * 0.005f * screenMultiplier);   //Matrix based
-        fontSize = (int)(fontSize * 0.05f * screenMultiplier);      //Fontsize based
+        fontSize = (int)(fontSize * 0.05f * screenMultiplier);      //Font size based
 
         //Vector3 matrixScale = new Vector3(fontSize, fontSize, fontSize);
         //Matrix4x4 guiMatrixResolutionIndependent = Matrix4x4.Scale(matrixScale);
@@ -95,6 +95,9 @@ public class IMGUIMono : MonoSingleton<IMGUIMono>
         for (int i = 0; i < infoListCount; i++)
         {
             DebugInfo item = debugInfoList[i];
+            int ratioAppliedFontSize = (int)(item.sizeRatio * fontSize);
+            debugGuiSkin.label.fontSize = ratioAppliedFontSize;
+            debugGuiSkin.box.fontSize = ratioAppliedFontSize;
 
             Rect position;
             Vector2 screenPosition;
