@@ -1,5 +1,4 @@
 using System;
-using System.Linq;
 using UnityEditor;
 using UnityEngine;
 using Object = UnityEngine.Object;
@@ -61,7 +60,7 @@ public static class HierachyDisplayer
         Component[] components = gameObject.GetComponents<Component>(); // getCompos by list?
 
         Component componentBackground = null;
-        Component componentMono = null;
+        MonoBehaviour componentMono = null;
 
         int componentLength = components.Length;
         for (int i = 1; i < componentLength; i++) // starts with 1 because 0 is always Transform
@@ -79,7 +78,7 @@ public static class HierachyDisplayer
                 string namespaceStr = itemAsMono.GetType().Namespace;
 
                 //ban list
-                bool isBannedNamespace = namespaceStr != null
+                bool isBannedNamespace = !string.IsNullOrEmpty(namespaceStr) 
                     && (namespaceStr.StartsWith(nameof(UnityEngine))
                     || namespaceStr.StartsWith(nameof(UnityEditor))
                     || namespaceStr.StartsWith(nameof(TMPro)));
@@ -138,14 +137,14 @@ public static class HierachyDisplayer
             EditorGUI.LabelField(smallIconRect, content);
         }
 
-        bool isDirty = EditorUtility.IsDirty(instanceID) || EditorUtility.IsDirty(componentBackground) || EditorUtility.IsDirty(componentMono);
+/*        bool isDirty = EditorUtility.IsDirty(instanceID) || EditorUtility.IsDirty(componentBackground) || EditorUtility.IsDirty(componentMono);
         if (isDirty)
         {
             Rect dirtyPosition = selectionRect;
             dirtyPosition.x -= 1.5f;
             dirtyPosition.width = 1.5f;
             EditorGUI.DrawRect(dirtyPosition, GeneralEditorUtility.ColorUtility.Hierachy.NewBlue);
-        }
+        }*/    
     }
     private static Color GetColor(bool isSelected, bool isHovering)
     {
