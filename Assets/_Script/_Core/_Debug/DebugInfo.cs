@@ -8,12 +8,16 @@ public struct DebugInfo
     public string message;
     public float sizeRatio;
 
-    public DebugInfo(Vector3 worldPosition, string message, float sizeRatio = 1)
+    public DebugInfo(string message, float sizeRatio = 1, Vector3 worldPosition = default)
+        : this(message, sizeRatio, false, worldPosition)
+    {
+    }
+    internal DebugInfo(string message, float sizeRatio = 1, bool is3D = false, Vector3 worldPosition = default)
     {
         this.worldPosition = worldPosition;
         this.message = message;
         this.sizeRatio = sizeRatio;
-        is3D = false;
+        this.is3D = is3D;
     }
     public readonly Vector3 GetScreenPos(Camera camera)
     {

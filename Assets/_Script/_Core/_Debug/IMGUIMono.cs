@@ -17,9 +17,9 @@ public class IMGUIMono : MonoSingleton<IMGUIMono>
 {
     protected override MonoSingletonFlags SingletonFlag => MonoSingletonFlags.DontDestroyOnLoad;
 
-    public static DebugKey CurrentDebugKey { get; set; } = DebugKey.DefaultFlag | DebugKey.Temp2;
+    public static DebugKey CurrentDebugKey { get; set; } = DebugKey.DefaultFlag;
     private static bool EnableGUI { get; set; } = false;
-    private static readonly List<DebugInfo> debugInfoList = new List<DebugInfo>(32);
+    private static readonly List<DebugInfo> debugInfoList = new List<DebugInfo>(16);
 
     [SerializeField, Range(0, 1)] private float screenMultiplier = 1;
     [SerializeField] private GUISkin debugGuiSkin;
@@ -32,6 +32,15 @@ public class IMGUIMono : MonoSingleton<IMGUIMono>
             EnableGUI = !EnableGUI;
         }
     }
+    public static void DebugText(DebugInfo debugInfo, DebugKey key = DebugKey.DefaultFlag)
+    {
+        if (!IsDebugAvailable(key))
+        {
+            return;
+        }
+
+        debugInfoList.Add(debugInfo);
+    }
     public static void DebugTextWorld(DebugInfo debugWorldInfo, DebugKey key = DebugKey.DefaultFlag)
     {
         if (!IsDebugAvailable(key)) return;
@@ -43,20 +52,10 @@ public class IMGUIMono : MonoSingleton<IMGUIMono>
     {
         if (!IsDebugAvailable(key)) return;
 
-        DebugInfo debugWorldInfo = new DebugInfo(worldPosition, target.ToString(), sizeRatio);
-        debugWorldInfo.is3D = true;
+        DebugInfo debugWorldInfo = new DebugInfo(target.ToString(), sizeRatio, true, worldPosition);
         debugInfoList.Add(debugWorldInfo);
     }
-    public static void DebugText(DebugInfo debugInfo, DebugKey key = DebugKey.DefaultFlag)
-    {
-        if (!IsDebugAvailable(key))
-        {
-            return;
-        }
-
-        debugInfoList.Add(debugInfo);
-    }
-    public static bool IsDebugAvailable(DebugKey key)
+    internal static bool IsDebugAvailable(DebugKey key)
     {
         bool result = (key & CurrentDebugKey) > 0 && EnableGUI;
         return result;
@@ -79,7 +78,7 @@ public class IMGUIMono : MonoSingleton<IMGUIMono>
         fontSize = (int)(fontSize * 0.05f * screenMultiplier);      //Font size based
 
         //Vector3 matrixScale = new Vector3(fontSize, fontSize, fontSize);
-        //Matrix4x4 guiMatrixResolutionIndependent = Matrix4x4.Scale(matrixScale);
+        //matrix4x4 guiMatrixResolutionIndependent = Matrix4x4.Scale(matrixScale);
         /*bool isZaxisZero = guiMatrixResolutionIndependent.m22 == 0;
         if (isZaxisZero)
         {
