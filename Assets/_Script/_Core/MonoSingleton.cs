@@ -36,7 +36,8 @@ public abstract class MonoSingleton<T> : MonoBehaviour where T : MonoSingleton<T
         if (_instance is not null)
         {
             Destroy(gameObject);
-            throw new Exception("TwoSingletons_" + typeof(T).Name);
+            Debug.LogError("TwoSingletons_" + typeof(T).Name);
+            return;
         }
 
         //custom singleton attribute setting
